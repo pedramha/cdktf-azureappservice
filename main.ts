@@ -1,5 +1,5 @@
 import { Construct } from "constructs";
-import { App, TerraformStack } from "cdktf";
+import { App, TerraformStack,TerraformOutput } from "cdktf";
 import {  AppService,  AppServicePlan,  AzurermProvider,  ResourceGroup} from './.gen/providers/azurerm';
 
 
@@ -13,8 +13,8 @@ class MyStack extends TerraformStack {
       features: [{}],
     });
 
-    const rg = new ResourceGroup(this, "rg-eastus", {
-      name: "rg-eastus",
+    const rg = new ResourceGroup(this, "rg2", {
+      name: "rg2",
       location: "eastus",
     });
 
@@ -23,7 +23,7 @@ class MyStack extends TerraformStack {
       resourceGroupName: rg.name,
       location: rg.location,
       name: "cdkforTerraformApp",
-      sku: [{ size: "B1", tier: "Standard" }],
+      sku: [{ size: "F1", tier: "Free" }],
       dependsOn: [rg],
     });
 
@@ -34,15 +34,12 @@ class MyStack extends TerraformStack {
       resourceGroupName: rg.name,
       dependsOn: [plan],
     });
-    const imagename = "nginx:latest";
-    service.addOverride("site_config", [
-      {
-        linux_fx_version: `DOCKER|${imagename}`,
-        use_32_bit_worker_process: true,
-      },
-    ]);
-  
+    new TerraformOutput(this, "appweburl", {
+      value: `https://${service.name}.azurewebsites.net/`,
+    });
+
   }
+
 }
 const app = new App();
 new MyStack(app, "terrcdk-azure");
